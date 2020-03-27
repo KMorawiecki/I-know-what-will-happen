@@ -1,0 +1,26 @@
+{
+	"Items":[
+		{
+			"variant": 0,
+			"left": "room2",
+			"leftlock": "unlocked",
+			"right": 1,
+			"rightlock": "locked",
+			"up": 1,
+			"uplock": "locked",
+			"down": 1,
+			"downlock": "unlocked"
+		},
+		{
+			"variant": 1,
+			"left": 0,
+			"leftlock": "locked",
+			"right": 0,
+			"rightlock": "unlocked",
+			"up": 0,
+			"uplock": "unlocked",
+			"down": 0,
+			"downlock": "locked"
+		}
+	]
+}

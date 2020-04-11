@@ -41,3 +41,6 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: XButton
+    uniqueID: 3969101487
+    locked: 0

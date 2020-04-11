@@ -62,13 +62,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Premade assets\Bandits - Pixel Art\Demo\CharacterSelector_Bandit.cs" />
+    <Compile Include="Assets\Premade assets\Bandits - Pixel Art\Demo\Sensor_Bandit.cs" />
+    <Compile Include="Assets\Scripts\Bandit_Backup.cs" />
     <Compile Include="Assets\Scripts\DungeonMap.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
+    <Compile Include="Assets\Scripts\InitDungeon.cs" />
     <Compile Include="Assets\Scripts\JsonHelper.cs" />
     <Compile Include="Assets\Scripts\MapManager.cs" />
+    <Compile Include="Assets\Scripts\Menu_Icon.cs" />
+    <Compile Include="Assets\Scripts\Minimap.cs" />
     <Compile Include="Assets\Scripts\MovementManager.cs" />
     <Compile Include="Assets\Scripts\RoomInfo.cs" />
-    <None Include="Assets\Medieval_pixel_art_asset_FREE\pixel_snapping_README.txt" />
+    <Compile Include="Assets\Scripts\Wizard.cs" />
+    <Compile Include="Assets\Scripts\XButton.cs" />
+    <None Include="Assets\Premade assets\SimplePixelUI\font\license.txt" />
+    <None Include="Assets\Premade assets\Medieval_pixel_art_asset_FREE\pixel_snapping_README.txt" />
+    <None Include="Assets\Premade assets\SimplePixelUI\font\readme.txt" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>C:/Users/Krzysztof/I know what happens/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>
     </Reference>

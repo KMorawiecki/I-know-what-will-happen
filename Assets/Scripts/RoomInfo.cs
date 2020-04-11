@@ -8,13 +8,14 @@ public class RoomInfo
 {
     public int variant;
     public int left;
-    public string leftlock;
+    public int leftlock;
     public int right;
-    public string rightlock;
+    public int rightlock;
     public int up;
-    public string uplock;
+    public int uplock;
     public int down;
-    public string downlock;
+    public int downlock;
+    public bool visited;
 }
 
 [Serializable]

@@ -1,0 +1,2 @@
+C:\Users\Krzysztof\I know what happens\obj\Debug\Assembly-CSharp.csprojAssemblyReference.cache
+C:\Users\Krzysztof\I know what happens\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache

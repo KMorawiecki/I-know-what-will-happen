@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using System;
+using UnityEngine.UI;
 
 public class MapManager : MonoBehaviour
 {
@@ -11,9 +12,12 @@ public class MapManager : MonoBehaviour
     private RoomInfo[] map;
     private int currentRoom = 0;
     private float shakeTime = Convert.ToSingle(10);
-    private bool doorMoving = false;
+    private float swayingTime = Convert.ToSingle(50);
+    private bool roomMoving = false;
+    private Vector2 startingPosition = new Vector2(0, 0);
     private GameObject closedDoor;
     private GameObject openedDoor;
+    private Minimap minimap;
 
     private GameObject upDoorInstance;
     private GameObject downDoorInstance;
@@ -23,6 +27,9 @@ public class MapManager : MonoBehaviour
 
     public GameObject firstRoom;
     public GameObject secondRoom;
+    public MovementManager moveManager;
+
+    public Text temp;
 
     // Start is called before the first frame update
     void Start()
@@ -33,26 +40,107 @@ public class MapManager : MonoBehaviour
         closedDoor = Resources.Load<GameObject>("Objects/Closed_door");
         openedDoor = Resources.Load<GameObject>("Objects/Opened_door");
 
-        UpdateRoom(currentRoom);
-    }
-
-    public void UpdateRoom(int newroom)
-    {
-        currentRoom = newroom;
-
         RoomInfo roomInfo = map[currentRoom];
 
-        DestroyObject(currentRoomInstance);
-        DestroyObject(leftDoorInstance);
-        DestroyObject(rightDoorInstance);
-        DestroyObject(upDoorInstance);
-        DestroyObject(downDoorInstance);
+        currentRoomInstance = InstantiateSelector(roomInfo.variant % 2, 0, 1, firstRoom, secondRoom, new Vector3(0, 0, 0));
+        upDoorInstance = InstantiateSelector(roomInfo.uplock, -1, 1, closedDoor, openedDoor, new Vector3(0, Convert.ToSingle(3.5), 0));
+        upDoorInstance.transform.parent = currentRoomInstance.transform;
+        downDoorInstance = InstantiateSelector(roomInfo.downlock, -1, 1, closedDoor, openedDoor, new Vector3(0, Convert.ToSingle(-3.5), 0));
+        downDoorInstance.transform.parent = currentRoomInstance.transform;
+        leftDoorInstance = InstantiateSelector(roomInfo.leftlock, -1, 1, closedDoor, openedDoor, new Vector3(Convert.ToSingle(-4.5), 0, 0));
+        leftDoorInstance.transform.parent = currentRoomInstance.transform;
+        rightDoorInstance = InstantiateSelector(roomInfo.rightlock, -1, 1, closedDoor, openedDoor, new Vector3(Convert.ToSingle(4.5), 0, 0));
+        rightDoorInstance.transform.parent = currentRoomInstance.transform;
 
-        currentRoomInstance = InstantiateSelector(Convert.ToString(roomInfo.variant), "0", "1", firstRoom, secondRoom, new Vector3(0, 0, 0));
-        upDoorInstance = InstantiateSelector(roomInfo.uplock, "locked", "unlocked", closedDoor, openedDoor, new Vector3(0, Convert.ToSingle(3.5), 0));
-        downDoorInstance = InstantiateSelector(roomInfo.downlock, "locked", "unlocked", closedDoor, openedDoor, new Vector3(0, Convert.ToSingle(-3.5), 0));
-        leftDoorInstance = InstantiateSelector(roomInfo.leftlock, "locked", "unlocked", closedDoor, openedDoor, new Vector3(Convert.ToSingle(- 4.5), 0, 0));
-        rightDoorInstance = InstantiateSelector(roomInfo.rightlock, "locked", "unlocked", closedDoor, openedDoor, new Vector3(Convert.ToSingle(4.5), 0, 0));
+        temp.text = Convert.ToString(roomInfo.variant);
+    }
+
+    private void Update()
+    {
+        
+    }
+
+    public IEnumerator UpdateRoom(int newroom, string dir)
+    {
+        roomMoving = true;
+
+        RoomInfo newRoomInfo = map[newroom];
+        Vector3 newRoomStart;
+
+        minimap.WentInDirection(dir);
+
+        if (newRoomInfo.left == currentRoom)
+        {
+            newRoomStart = new Vector3(20, 0, 0);
+            startingPosition = new Vector2(-3, 0);
+        }
+        else if (newRoomInfo.right == currentRoom)
+        {
+            newRoomStart = new Vector3(-20, 0, 0);
+            startingPosition = new Vector2(3, 0);
+        }
+        else if (newRoomInfo.up == currentRoom)
+        {
+            newRoomStart = new Vector3(0, -10, 0);
+            startingPosition = new Vector2(0, Convert.ToSingle(1.5));
+        }
+        else
+        {
+            newRoomStart = new Vector3(0, 10, 0);
+            startingPosition = new Vector2(0, Convert.ToSingle(-1.5));
+        }
+
+        GameObject nextRoomInstance = InstantiateSelector(newRoomInfo.variant % 2, 0, 1, firstRoom, secondRoom, newRoomStart);
+        GameObject nextUpDoorInstance = InstantiateSelector(newRoomInfo.uplock, -1, 1, closedDoor, openedDoor, new Vector3(newRoomStart.x, Convert.ToSingle(newRoomStart.y + 3.5), 0));
+        nextUpDoorInstance.transform.parent = nextRoomInstance.transform;
+        GameObject nextDownDoorInstance = InstantiateSelector(newRoomInfo.downlock, -1, 1, closedDoor, openedDoor, new Vector3(newRoomStart.x, Convert.ToSingle(newRoomStart.y - 3.5), 0));
+        nextDownDoorInstance.transform.parent = nextRoomInstance.transform;
+        GameObject nextLeftDoorInstance = InstantiateSelector(newRoomInfo.leftlock, -1, 1, closedDoor, openedDoor, new Vector3(Convert.ToSingle(newRoomStart.x - 4.5), newRoomStart.y, 0));
+        nextLeftDoorInstance.transform.parent = nextRoomInstance.transform;
+        GameObject nextRightDoorInstance = InstantiateSelector(newRoomInfo.rightlock, -1, 1, closedDoor, openedDoor, new Vector3(Convert.ToSingle(newRoomStart.x + 4.5), newRoomStart.y, 0));
+        nextRightDoorInstance.transform.parent = nextRoomInstance.transform;
+
+        switch (dir)
+        {
+            case "left":
+                StartCoroutine(moveManager.SmoothMovement(currentRoomInstance, new Vector3(20, 0, 0), swayingTime));
+                StartCoroutine(moveManager.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
+                yield return new WaitUntil(() => currentRoomInstance.transform.position == new Vector3(20, 0, 0));
+                break;
+            case "right":
+                StartCoroutine(moveManager.SmoothMovement(currentRoomInstance, new Vector3(-20, 0, 0), swayingTime));
+                StartCoroutine(moveManager.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
+                yield return new WaitUntil(() => currentRoomInstance.transform.position == new Vector3(-20, 0, 0));
+                break;
+            case "up":
+                StartCoroutine(moveManager.SmoothMovement(currentRoomInstance, new Vector3(0, -10, 0), swayingTime));
+                StartCoroutine(moveManager.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
+                yield return new WaitUntil(() => currentRoomInstance.transform.position == new Vector3(0, -10, 0));
+                break;
+            case "down":
+                StartCoroutine(moveManager.SmoothMovement(currentRoomInstance, new Vector3(0, 10, 0), swayingTime));
+                StartCoroutine(moveManager.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
+                yield return new WaitUntil(() => currentRoomInstance.transform.position == new Vector3(0, 10, 0));
+                break;
+        }
+
+        yield return new WaitUntil(() => nextRoomInstance.transform.position == new Vector3(0, 0, 0));
+
+        currentRoom = newroom;
+
+        DestroyObject(currentRoomInstance);
+
+        currentRoomInstance = nextRoomInstance;
+        upDoorInstance = nextUpDoorInstance;
+        downDoorInstance = nextDownDoorInstance;
+        leftDoorInstance = nextLeftDoorInstance;
+        rightDoorInstance = nextRightDoorInstance;
+
+        temp.text = Convert.ToString(newRoomInfo.variant);
+
+        roomMoving = false;
+
+        yield return null;
     }
 
     private void DestroyObject(GameObject obj)
@@ -62,11 +150,11 @@ public class MapManager : MonoBehaviour
     }
 
     //so I dont have to write 10 times same thing
-    private GameObject InstantiateSelector(string givenString, string firstOption, string secondOption, GameObject firstObject, GameObject secondObject, Vector3 position)
+    private GameObject InstantiateSelector(int givenValue, int firstOption, int secondOption, GameObject firstObject, GameObject secondObject, Vector3 position)
     {
-        if (firstOption == givenString)
+        if (firstOption == givenValue)
             return Instantiate(firstObject, position, Quaternion.identity);
-        else if (secondOption == givenString)
+        else if (secondOption == givenValue)
             return Instantiate(secondObject, position, Quaternion.identity);
         else
         {
@@ -80,13 +168,13 @@ public class MapManager : MonoBehaviour
         switch(dir)
         {
             case "up":
-                return map[currentRoom].uplock == "locked" ? false : true;
+                return map[currentRoom].uplock == -1 ? false : true;
             case "down":
-                return map[currentRoom].downlock == "locked" ? false : true;
+                return map[currentRoom].downlock == -1 ? false : true;
             case "left":
-                return map[currentRoom].leftlock == "locked" ? false : true;
+                return map[currentRoom].leftlock == -1 ? false : true;
             case "right":
-                return map[currentRoom].rightlock == "locked" ? false : true;
+                return map[currentRoom].rightlock == -1 ? false : true;
         }
 
         return false;
@@ -97,14 +185,14 @@ public class MapManager : MonoBehaviour
         return map[currentRoom];
     }
 
-    public IEnumerator ShakeThatDoor(string dir)
+    public GameObject GetRoomInstance()
+    {
+        return currentRoomInstance;
+    }
+
+    public void ShakeThatDoor(string dir)
     {
         GameObject doorToShake = null;
-        Vector3 currentPosition;
-        Vector3 leftPosition;
-        Vector3 rightPosition;
-
-        doorMoving = true;
 
         switch (dir)
         {
@@ -122,52 +210,23 @@ public class MapManager : MonoBehaviour
                 break;
         }
 
-        currentPosition = doorToShake.transform.position;
-        leftPosition = new Vector3(currentPosition.x - Convert.ToSingle(0.25), currentPosition.y, 0);
-        rightPosition = new Vector3(currentPosition.x + Convert.ToSingle(0.25), currentPosition.y, 0);
+        Animator doorAnim = doorToShake.GetComponent<Animator>();
 
-        StartCoroutine(SmoothMovement(doorToShake, leftPosition));
-        yield return new WaitUntil(() => doorToShake.transform.position == leftPosition);
-        StartCoroutine(SmoothMovement(doorToShake, rightPosition));
-        yield return new WaitUntil(() => doorToShake.transform.position == rightPosition);
-        StartCoroutine(SmoothMovement(doorToShake, leftPosition));
-        yield return new WaitUntil(() => doorToShake.transform.position == leftPosition);
-        StartCoroutine(SmoothMovement(doorToShake, currentPosition));
-
-        doorMoving = false;
-
-        yield return null;
+        doorAnim.SetTrigger("EntryTry");
     }
 
-    //Co-routine for moving units from one space to next, takes a parameter end to specify where to move to.
-    protected IEnumerator SmoothMovement(GameObject obj, Vector3 end)
+    public bool IsRoomMoving()
     {
-        //Calculate the remaining distance to move based on the square magnitude of the difference between current position and end parameter. 
-        //Square magnitude is used instead of magnitude because it's computationally cheaper.
-        float sqrRemainingDistance = (obj.transform.position - end).sqrMagnitude;
-        Rigidbody2D rgbd = obj.GetComponent<Rigidbody2D>();
-
-        //While that distance is greater than a very small amount (Epsilon, almost zero):
-        while (sqrRemainingDistance > float.Epsilon)
-        {
-            //Find a new position proportionally closer to the end, based on the moveTime
-            Vector3 newPostion = Vector3.MoveTowards(rgbd.position, end, shakeTime * Time.deltaTime);
-
-            //Call MovePosition on attached Rigidbody2D and move it to the calculated position.
-            rgbd.MovePosition(newPostion);
-
-            //Recalculate the remaining distance after moving.
-            sqrRemainingDistance = (obj.transform.position - end).sqrMagnitude;
-
-            //Return and loop until sqrRemainingDistance is close enough to zero to end the function
-            yield return null;
-        }
-
-        yield return null;
+        return roomMoving;
     }
 
-    public bool isDoorMoving()
+    public Vector2 GetStartingPosition()
     {
-        return doorMoving;
+        return startingPosition;
+    }
+
+    public void SetMinimap(Minimap minimap)
+    {
+        this.minimap = minimap;
     }
 }

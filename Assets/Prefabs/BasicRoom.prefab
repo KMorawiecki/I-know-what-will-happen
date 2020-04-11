@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5240638445238827223}
   - component: {fileID: 2010829373}
   - component: {fileID: 2010829372}
+  - component: {fileID: -5450431239268458978}
   m_Layer: 31
   m_Name: BasicRoom
   m_TagString: Untagged
@@ -1427,6 +1428,27 @@ TilemapRenderer:
   m_Mode: 0
   m_DetectChunkCullingBounds: 0
   m_MaskInteraction: 0
+--- !u!50 &-5450431239268458978
+Rigidbody2D:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 31316040037876850}
+  m_BodyType: 0
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
+  m_GravityScale: 0
+  m_Material: {fileID: 0}
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &7536063562257356783
 GameObject:
   m_ObjectHideFlags: 0

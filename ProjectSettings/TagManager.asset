@@ -41,6 +41,18 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: BattleLines
+    uniqueID: 1373835709
+    locked: 0
+  - name: Enemy
+    uniqueID: 1597778973
+    locked: 0
   - name: XButton
     uniqueID: 3969101487
+    locked: 0
+  - name: MinimapRoom
+    uniqueID: 4238315751
+    locked: 0
+  - name: MinimapCurrent
+    uniqueID: 2877655251
     locked: 0

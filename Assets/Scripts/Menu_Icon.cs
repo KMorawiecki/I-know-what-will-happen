@@ -9,6 +9,11 @@ public class Menu_Icon : MonoBehaviour
     public GameManager gameManager;
     private GameObject eqTabInstance;
 
+    private void Start()
+    {
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
+    }
+
     public void Enlarge()
     {
         RectTransform this_transform = gameObject.GetComponent<RectTransform>();

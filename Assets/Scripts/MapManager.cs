@@ -4,6 +4,7 @@ using UnityEngine;
 using System.IO;
 using System;
 using UnityEngine.UI;
+using UnityEngine.Tilemaps;
 
 public class MapManager : MonoBehaviour
 {
@@ -11,9 +12,15 @@ public class MapManager : MonoBehaviour
     private string jsonString;
     private RoomInfo[] map;
     private int currentRoom = 0;
-    private float shakeTime = Convert.ToSingle(10);
-    private float swayingTime = Convert.ToSingle(50);
     private bool roomMoving = false;
+    private readonly float shakeTime = 10F;
+    private readonly float swayingTime = 50F;
+    private readonly float alpha_factor = 0.4F;      //battle lines transparency
+    private readonly float battle_size = 1.6F;
+    private readonly float increase_speed = 0.002F;
+    private readonly float fading_speed = 0.01F;
+    private readonly float player_to_battle_speed = 17F;
+
     private Vector2 startingPosition = new Vector2(0, 0);
     private GameObject closedDoor;
     private GameObject openedDoor;
@@ -25,11 +32,12 @@ public class MapManager : MonoBehaviour
     private GameObject rightDoorInstance;
     private GameObject currentRoomInstance;
 
+    public GameManager gameManager;
     public GameObject firstRoom;
     public GameObject secondRoom;
     public MovementManager moveManager;
 
-    public Text temp;
+    //private bool temp = true;
 
     // Start is called before the first frame update
     void Start()
@@ -52,13 +60,20 @@ public class MapManager : MonoBehaviour
         rightDoorInstance = InstantiateSelector(roomInfo.rightlock, -1, 1, closedDoor, openedDoor, new Vector3(Convert.ToSingle(4.5), 0, 0));
         rightDoorInstance.transform.parent = currentRoomInstance.transform;
 
-        temp.text = Convert.ToString(roomInfo.variant);
+        HideBattleLines(currentRoomInstance);
+
+        minimap = Resources.Load<Minimap>("Objects/Minimap");
+        minimap = Instantiate(minimap, new Vector3(-8, 2, 0), Quaternion.identity);
     }
 
-    private void Update()
-    {
-        
-    }
+    //private void Update()
+    //{
+    //    if (Input.GetMouseButtonDown(0) && temp)
+    //    {
+    //        temp = false;
+    //        StartCoroutine(ChangeToBattle());
+    //    }
+    //}
 
     public IEnumerator UpdateRoom(int newroom, string dir)
     {
@@ -67,7 +82,7 @@ public class MapManager : MonoBehaviour
         RoomInfo newRoomInfo = map[newroom];
         Vector3 newRoomStart;
 
-        minimap.WentInDirection(dir);
+        minimap.MoveCurrent(dir, newRoomInfo);
 
         if (newRoomInfo.left == currentRoom)
         {
@@ -99,6 +114,8 @@ public class MapManager : MonoBehaviour
         nextLeftDoorInstance.transform.parent = nextRoomInstance.transform;
         GameObject nextRightDoorInstance = InstantiateSelector(newRoomInfo.rightlock, -1, 1, closedDoor, openedDoor, new Vector3(Convert.ToSingle(newRoomStart.x + 4.5), newRoomStart.y, 0));
         nextRightDoorInstance.transform.parent = nextRoomInstance.transform;
+
+        HideBattleLines(nextRoomInstance);
 
         switch (dir)
         {
@@ -136,7 +153,9 @@ public class MapManager : MonoBehaviour
         leftDoorInstance = nextLeftDoorInstance;
         rightDoorInstance = nextRightDoorInstance;
 
-        temp.text = Convert.ToString(newRoomInfo.variant);
+        //add monsters
+        if (newRoomInfo.enemy_num != 0)
+            StartCoroutine(ChangeToBattle());
 
         roomMoving = false;
 
@@ -178,6 +197,15 @@ public class MapManager : MonoBehaviour
         }
 
         return false;
+    }
+
+    public void ChangeCluster(int toChange, int prefab)
+    {
+        foreach (RoomInfo element in map)
+        {
+            if (element.visited == toChange)
+                element.visited = prefab;
+        }
     }
 
     public RoomInfo GetRoom()
@@ -228,5 +256,106 @@ public class MapManager : MonoBehaviour
     public void SetMinimap(Minimap minimap)
     {
         this.minimap = minimap;
+    }
+
+    private void AddMonsters()
+    {
+        int divider = (int) Math.Pow(10, map[currentRoom].enemy_num - 1);
+
+        int x_list = map[currentRoom].enemy_x;
+        int y_list = map[currentRoom].enemy_y;
+        string name_list = map[currentRoom].enemy_name + "_";
+        string hp_list = map[currentRoom].enemy_hp + "_";
+
+        for (int i = 0; i < map[currentRoom].enemy_num; i++)
+        {
+            Debug.Log("list: " + y_list);
+
+            int x_pos = ((x_list / divider) - 3) * 3;
+            int y_pos = ((y_list / divider) - 2) * 3;
+
+            Debug.Log("y: " + y_list / divider);
+
+            string name = name_list.Substring(1, name_list.IndexOf("_", 1) - 1);
+            int hp = Convert.ToInt32(hp_list.Substring(1, hp_list.IndexOf("_", 1) - 1));
+
+            x_list -= (x_list / divider) * divider;
+            y_list -= (y_list / divider) * divider;
+            name_list = name_list.Substring(name_list.IndexOf("_", 1));
+            hp_list = hp_list.Substring(hp_list.IndexOf("_", 1));
+
+            Enemy monster = Instantiate(gameManager.GetMonster(name), currentRoomInstance.transform.GetComponent<Grid>().CellToWorld(new Vector3Int(x_pos, y_pos, 0)), Quaternion.identity);
+            if (monster.GetHealth() > hp)
+                monster.DealDamage(monster.GetHealth() - hp);
+
+            divider = divider / 10;
+        }
+    }
+
+    ///////////////////////////////////BATTLE METHODS
+    private IEnumerator ChangeToBattle()
+    {
+        leftDoorInstance.SetActive(false);
+        rightDoorInstance.SetActive(false);
+        upDoorInstance.SetActive(false);
+        downDoorInstance.SetActive(false);
+        minimap.Hide();
+
+        Vector3 desiredScale = battle_size * currentRoomInstance.transform.localScale;
+        StartCoroutine(IncreaseSize(currentRoomInstance, battle_size, increase_speed));
+        StartCoroutine(moveManager.SmoothMovement(gameManager.GetPlayer().gameObject, moveManager.GetPlayerPosition()*1.5F, player_to_battle_speed));
+        yield return new WaitUntil(() => desiredScale.x <= currentRoomInstance.transform.localScale.x && desiredScale.y <= currentRoomInstance.transform.localScale.y);
+
+        gameManager.ChangeToBattle();
+        AddMonsters();
+
+        StartCoroutine(FadeInBattleLines(currentRoomInstance, fading_speed));
+        yield return null;
+    }
+
+    private IEnumerator IncreaseSize(GameObject room, float factor, float speed)
+    {
+        Vector3 desiredScale = factor*room.transform.localScale;
+        float scale = room.transform.localScale.x;
+
+        while (desiredScale.x > room.transform.localScale.x || desiredScale.y > room.transform.localScale.y)
+        {
+            room.transform.localScale = Vector3.one * scale;
+            scale += speed;
+            yield return null;
+        }
+
+        yield return null;
+    }
+
+    private IEnumerator FadeInBattleLines(GameObject room, float speed)
+    {
+        Tilemap lines = room.transform.Find("BattleLines").GetComponent<Tilemap>();
+        float alpha = 0.0F;
+
+        while(alpha < alpha_factor)
+        {
+            foreach (var position in lines.cellBounds.allPositionsWithin)
+            {
+                lines.SetTileFlags(position, TileFlags.None);
+                lines.SetColor(position, new Color(1, 1, 1, lines.GetColor(position).a + speed));
+            }
+
+            alpha += speed;
+            yield return null;
+        }
+
+        yield return null;
+    }
+
+    private void HideBattleLines(GameObject room)
+    {
+        //hide battle lines
+        Tilemap lines = room.transform.Find("BattleLines").GetComponent<Tilemap>();
+        foreach (var position in lines.cellBounds.allPositionsWithin)
+        {
+            lines.SetTileFlags(position, TileFlags.None);
+            lines.SetColor(position, new Color(1, 1, 1, 0));
+        }
     }
 }

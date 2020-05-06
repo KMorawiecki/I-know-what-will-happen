@@ -18,7 +18,7 @@ public class MovementManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {         
-        if (!movementCooldown)
+        if (!movementCooldown && !player.IsInBattle())
         {
             if (Input.GetKey("up"))
                 StartCoroutine(InRoomMovement(new Vector3(0, Convert.ToSingle(1.5), 0), "up"));
@@ -65,7 +65,6 @@ public class MovementManager : MonoBehaviour
                 player.SetRight();
             else if (mapManager.GetStartingPosition().x > 0)
                 player.SetLeft();
-            //StartCoroutine(SmoothMovement(player.gameObject, new Vector3(mapManager.GetStartingPosition().x, mapManager.GetStartingPosition().y), player.GetSpeed()));
             yield return new WaitUntil(() =>  mapManager.IsRoomMoving() == false);
             player.gameObject.GetComponent<SpriteRenderer>().enabled = true;
         }
@@ -98,7 +97,6 @@ public class MovementManager : MonoBehaviour
     {
         //Calculate the remaining distance to move based on the square magnitude of the difference between current position and end parameter. 
         //Square magnitude is used instead of magnitude because it's computationally cheaper.
-        //Vector2 relevantDistance = 
         float sqrRemainingDistance = new Vector2(obj.transform.position.x - end.x, obj.transform.position.y - end.y).sqrMagnitude;
         Rigidbody2D rgbd = obj.GetComponent<Rigidbody2D>();
 
@@ -124,5 +122,10 @@ public class MovementManager : MonoBehaviour
     public void SetPlayer(Wizard wiz)
     {
         player = wiz;
+    }
+
+    public Vector3 GetPlayerPosition()
+    {
+        return player.transform.position;
     }
 }

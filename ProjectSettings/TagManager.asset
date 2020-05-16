@@ -47,12 +47,15 @@ TagManager:
   - name: Enemy
     uniqueID: 1597778973
     locked: 0
-  - name: XButton
-    uniqueID: 3969101487
+  - name: AbilityUI
+    uniqueID: 2440421235
     locked: 0
   - name: MinimapRoom
     uniqueID: 4238315751
     locked: 0
   - name: MinimapCurrent
     uniqueID: 2877655251
+    locked: 0
+  - name: XButton
+    uniqueID: 3969101487
     locked: 0

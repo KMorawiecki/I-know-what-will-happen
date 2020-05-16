@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Wizard: MonoBehaviour {
 
@@ -17,14 +18,22 @@ public class Wizard: MonoBehaviour {
     private int integrity;
     private int mana;
 
+    private List<string> playerSpells;
+    private int movement_range;
+
     // Use this for initialization
     void Start () {
         m_animator = GetComponent<Animator>();
         m_body2d = GetComponent<Rigidbody2D>();
+        playerSpells = new List<string>();
+        movement_range = 1;
+
+        playerSpells.Add("ExistentialPurge");
     }
 	
 	// Update is called once per frame
 	void Update () {
+
         // -- Handle input and movement --
         float inputX = Input.GetAxis("Horizontal");
 
@@ -107,8 +116,23 @@ public class Wizard: MonoBehaviour {
         m_combatIdle = true;
     }
 
+    public void NormalStance()
+    {
+        m_combatIdle = false;
+    }
+
     public bool IsInBattle()
     {
         return m_combatIdle;
+    }
+
+    public List<string> GetSpells()
+    {
+        return playerSpells;
+    }
+
+    public int GetMovementRange()
+    {
+        return movement_range;
     }
 }

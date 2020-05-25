@@ -8,6 +8,8 @@ using UnityEngine.Tilemaps;
 
 public class MapManager : MonoBehaviour
 {
+    public static MapManager Instance { get; private set; }
+
     private string path;
     private string jsonString;
     private RoomInfo[] map;
@@ -35,12 +37,21 @@ public class MapManager : MonoBehaviour
     private GameObject rightDoorInstance;
     private GameObject currentRoomInstance;
 
-    public GameManager gameManager;
     public GameObject firstRoom;
     public GameObject secondRoom;
-    public MovementManager moveManager;
 
-    //private bool temp = true;
+    private void Awake()
+    {
+        if(Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -121,24 +132,20 @@ public class MapManager : MonoBehaviour
         switch (dir)
         {
             case "left":
-                StartCoroutine(moveManager.SmoothMovement(currentRoomInstance, new Vector3(20, 0, 0), swayingTime));
-                StartCoroutine(moveManager.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
-                yield return new WaitUntil(() => currentRoomInstance.transform.position == new Vector3(20, 0, 0));
+                StartCoroutine(MovementManager.Instance.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
+                yield return StartCoroutine(MovementManager.Instance.SmoothMovement(currentRoomInstance, new Vector3(20, 0, 0), swayingTime));
                 break;
             case "right":
-                StartCoroutine(moveManager.SmoothMovement(currentRoomInstance, new Vector3(-20, 0, 0), swayingTime));
-                StartCoroutine(moveManager.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
-                yield return new WaitUntil(() => currentRoomInstance.transform.position == new Vector3(-20, 0, 0));
+                StartCoroutine(MovementManager.Instance.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
+                yield return StartCoroutine(MovementManager.Instance.SmoothMovement(currentRoomInstance, new Vector3(-20, 0, 0), swayingTime));
                 break;
             case "up":
-                StartCoroutine(moveManager.SmoothMovement(currentRoomInstance, new Vector3(0, -10, 0), swayingTime));
-                StartCoroutine(moveManager.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
-                yield return new WaitUntil(() => currentRoomInstance.transform.position == new Vector3(0, -10, 0));
+                StartCoroutine(MovementManager.Instance.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
+                yield return StartCoroutine(MovementManager.Instance.SmoothMovement(currentRoomInstance, new Vector3(0, -10, 0), swayingTime));
                 break;
             case "down":
-                StartCoroutine(moveManager.SmoothMovement(currentRoomInstance, new Vector3(0, 10, 0), swayingTime));
-                StartCoroutine(moveManager.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
-                yield return new WaitUntil(() => currentRoomInstance.transform.position == new Vector3(0, 10, 0));
+                StartCoroutine(MovementManager.Instance.SmoothMovement(nextRoomInstance, new Vector3(0, 0, 0), swayingTime));
+                yield return StartCoroutine(MovementManager.Instance.SmoothMovement(currentRoomInstance, new Vector3(0, 10, 0), swayingTime));
                 break;
         }
 
@@ -282,7 +289,7 @@ public class MapManager : MonoBehaviour
             name_list = name_list.Substring(name_list.IndexOf("_", 1));
             hp_list = hp_list.Substring(hp_list.IndexOf("_", 1));
 
-            Enemy monster = Instantiate(gameManager.GetMonster(name), currentRoomInstance.transform.GetComponent<Grid>().CellToWorld(new Vector3Int(x_pos, y_pos, 0)), Quaternion.identity);
+            Enemy monster = Instantiate(GameManager.Instance.GetMonster(name), currentRoomInstance.transform.GetComponent<Grid>().CellToWorld(new Vector3Int(x_pos, y_pos, 0)), Quaternion.identity);
             enemyList.Add(monster);
 
             if (monster.GetHealth() > hp)
@@ -312,14 +319,14 @@ public class MapManager : MonoBehaviour
         minimap.Hide();
 
         Vector3 desiredScale = battle_size * currentRoomInstance.transform.localScale;
-        Vector3 playerGoal = moveManager.GetPlayerPosition() * 1.7F;
-        StartCoroutine(moveManager.RashMovement(gameManager.GetPlayer().gameObject, playerGoal, player_to_battle_duration));
+        Vector3 playerGoal = MovementManager.Instance.GetPlayerPosition() * 1.7F;
+        StartCoroutine(MovementManager.Instance.RashMovement(GameManager.Instance.GetPlayer().gameObject, playerGoal, player_to_battle_duration));
         yield return StartCoroutine(IncreaseSize(currentRoomInstance, battle_size, increase_speed));
         //yield return new WaitUntil(() => (desiredScale.x <= currentRoomInstance.transform.localScale.x && desiredScale.y <= currentRoomInstance.transform.localScale.y));
         //                                  //  && (playerGoal - moveManager.GetPlayerPosition()).sqrMagnitude <= float.Epsilon));
 
         //StopAllCoroutines();
-        gameManager.ChangeToBattle();
+        GameManager.Instance.ChangeToBattle();
         AddMonsters();
 
         StartCoroutine(FadeInBattleLines(currentRoomInstance, fading_speed));
@@ -331,11 +338,11 @@ public class MapManager : MonoBehaviour
         yield return StartCoroutine(FadeOutBattleLines(currentRoomInstance, fading_speed));
 
         Vector3 playerGoal = new Vector3(0, 0, -1);
-        StartCoroutine(moveManager.RashMovement(gameManager.GetPlayer().gameObject, playerGoal, player_to_battle_duration));
+        StartCoroutine(MovementManager.Instance.RashMovement(GameManager.Instance.GetPlayer().gameObject, playerGoal, player_to_battle_duration));
         yield return StartCoroutine(DecreaseSize(currentRoomInstance, battle_size, increase_speed));
 
         //StopAllCoroutines();
-        gameManager.ChangeToNormal();
+        GameManager.Instance.ChangeToNormal();
 
         leftDoorInstance.SetActive(true);
         rightDoorInstance.SetActive(true);

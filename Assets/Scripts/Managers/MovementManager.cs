@@ -5,11 +5,24 @@ using UnityEngine;
 
 public class MovementManager : MonoBehaviour
 {
-    public MapManager mapManager;
+    public static MovementManager Instance { get; private set; }
+
     private Wizard player;
     private bool movementCooldown = false;
 
-    // Update is called once per frame
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+    
     void Update()
     {         
         if (!movementCooldown && !player.IsInBattle())
@@ -29,23 +42,23 @@ public class MovementManager : MonoBehaviour
     {
         yield return new WaitUntil(() => !player.IsMoving());
 
-        if (mapManager.IsDoorOpen(dir))
+        if (MapManager.Instance.IsDoorOpen(dir))
         {
             int newroom = 0;
 
             switch (dir)
             {
                 case "left":
-                    newroom = mapManager.GetRoom().left;
+                    newroom = MapManager.Instance.GetRoom().left;
                     break;
                 case "right":
-                    newroom = mapManager.GetRoom().right;
+                    newroom = MapManager.Instance.GetRoom().right;
                     break;
                 case "down":
-                    newroom = mapManager.GetRoom().down;
+                    newroom = MapManager.Instance.GetRoom().down;
                     break;
                 case "up":
-                    newroom = mapManager.GetRoom().up;
+                    newroom = MapManager.Instance.GetRoom().up;
                     break;
                 default:
                     Debug.Log("Incorrect input");
@@ -53,17 +66,17 @@ public class MovementManager : MonoBehaviour
             }
 
             player.gameObject.GetComponent<SpriteRenderer>().enabled = false;
-            StartCoroutine(mapManager.UpdateRoom(newroom, dir));
-            player.transform.position = new Vector3(mapManager.GetStartingPosition().x, mapManager.GetStartingPosition().y, -1);
-            if (mapManager.GetStartingPosition().x < 0)
+            StartCoroutine(MapManager.Instance.UpdateRoom(newroom, dir));
+            player.transform.position = new Vector3(MapManager.Instance.GetStartingPosition().x, MapManager.Instance.GetStartingPosition().y, -1);
+            if (MapManager.Instance.GetStartingPosition().x < 0)
                 player.SetRight();
-            else if (mapManager.GetStartingPosition().x > 0)
+            else if (MapManager.Instance.GetStartingPosition().x > 0)
                 player.SetLeft();
-            yield return new WaitUntil(() =>  mapManager.IsRoomMoving() == false);
+            yield return new WaitUntil(() =>  MapManager.Instance.IsRoomMoving() == false);
             player.gameObject.GetComponent<SpriteRenderer>().enabled = true;
         }
         else
-            mapManager.ShakeThatDoor(dir);
+            MapManager.Instance.ShakeThatDoor(dir);
 
         movementCooldown = false;
         yield return null;
@@ -78,9 +91,8 @@ public class MovementManager : MonoBehaviour
         else if (end.x < player.gameObject.transform.position.x)
             player.SetLeft();
 
-        StartCoroutine(SmoothMovement(player.gameObject, end, player.GetSpeed()));
         player.SetMoving(true);
-        yield return new WaitUntil(() => player.gameObject.transform.position.x == end.x && player.gameObject.transform.position.y == end.y);
+        yield return StartCoroutine(SmoothMovement(player.gameObject, end, player.GetSpeed()));
         player.SetMoving(false);
         StartCoroutine(TryToMoveRoom(chosenDir));
         yield return null;

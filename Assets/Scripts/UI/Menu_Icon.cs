@@ -6,13 +6,7 @@ using System;
 
 public class Menu_Icon : MonoBehaviour
 {
-    public GameManager gameManager;
     private GameObject eqTabInstance;
-
-    private void Start()
-    {
-        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
-    }
 
     public void Enlarge()
     {
@@ -30,7 +24,7 @@ public class Menu_Icon : MonoBehaviour
 
     public void ShowEQ()
     {
-        gameManager.DisableRoom();
+        GameManager.Instance.DisableRoom();
         GameObject eqTabPrefab = Resources.Load<GameObject>("Objects/EquipmentTab");
         eqTabInstance = Instantiate(eqTabPrefab, new Vector3(0,0,0), Quaternion.identity);
 

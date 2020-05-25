@@ -14,15 +14,23 @@ public class Wizard: MonoBehaviour {
     private bool                moving = false;
     private bool                swap_dir = false;
 
-    private int health;
-    private int integrity;
-    private int mana;
+    private int health = 100;
+    private int integrity = 100;
+    private int mana = 100;
+
+    private WizardAttribute health_bar;
+    private WizardAttribute integrity_bar;
+    private WizardAttribute mana_bar;
 
     private List<string> playerSpells;
     private int movement_range;
 
     // Use this for initialization
     void Start () {
+        health_bar = UIManager.Instance.GetBar("health");
+        mana_bar = UIManager.Instance.GetBar("health");
+        integrity_bar = UIManager.Instance.GetBar("health");
+
         m_animator = GetComponent<Animator>();
         m_body2d = GetComponent<Rigidbody2D>();
         playerSpells = new List<string>();
@@ -134,5 +142,22 @@ public class Wizard: MonoBehaviour {
     public int GetMovementRange()
     {
         return movement_range;
+    }
+
+    public void Damage(int points)
+    {
+        m_animator.SetTrigger("Hurt");
+        if (points >= health)
+        {
+            health_bar.ChangeValue(false, health);
+            Invoke("Die", 1f);
+        }
+        else
+            health_bar.ChangeValue(false, points);
+    }
+
+    public void Die()
+    {
+        m_animator.SetTrigger("death");
     }
 }

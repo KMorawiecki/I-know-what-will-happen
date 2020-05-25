@@ -4,8 +4,6 @@ using UnityEngine;
 
 public abstract class FightAtributeHolder : MonoBehaviour
 {
-    GameManager gameManager;
-    BattleManager battleManager;
     GameObject skillHolder;
     SpriteRenderer spriteRenderer;
 
@@ -14,7 +12,6 @@ public abstract class FightAtributeHolder : MonoBehaviour
     // Start is called before the first frame update
     protected virtual void Start()
     {
-        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
         skillHolder = gameObject.transform.Find("AbilityHolder").gameObject;
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
@@ -60,7 +57,7 @@ public abstract class FightAtributeHolder : MonoBehaviour
 
     protected void AddSpells()
     {
-        List<string> spells = gameManager.GetPlayer().GetSpells();
+        List<string> spells = GameManager.Instance.GetPlayer().GetSpells();
 
         foreach (string spell in spells)
         {

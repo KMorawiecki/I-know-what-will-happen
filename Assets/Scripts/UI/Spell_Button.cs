@@ -4,22 +4,18 @@ using UnityEngine;
 
 public class Spell_Button : MonoBehaviour
 {
-    private MapManager map_manager;
-    private BattleManager battleManager;
-    private RaycastHit2D rh2d;
+    //private RaycastHit2D rh2d;
 
-    private void Start()
-    {
-        map_manager = GameObject.Find("MapManager").GetComponent<MapManager>();
-        battleManager = GameObject.Find("BattleManager").GetComponent<BattleManager>();
-        rh2d = new RaycastHit2D();
-    }
+    //private void Start()
+    //{
+    //    rh2d = new RaycastHit2D();
+    //}
 
     public void InvokeSpell()
     {
         InvokeExistentialPurge();
         //transform.GetComponentInParent<FightAtributeHolder>().BlockUI();
-        battleManager.BlockSwordAndStaff();
+        BattleManager.Instance.BlockSwordAndStaff();
         transform.GetComponentInParent<FightAtributeHolder>().Deactivate();
     }
 
@@ -28,11 +24,9 @@ public class Spell_Button : MonoBehaviour
         GameObject go = new GameObject("ExistentialPurge");
         ExistentialPurge ep = go.AddComponent<ExistentialPurge>();
 
-        foreach(Enemy enemy in map_manager.GetEnemies())
-        {
+        foreach(Enemy enemy in MapManager.Instance.GetEnemies())
             enemy.SetTargeting(ep);
-        }
 
-        battleManager.SetSpell(go);
+        BattleManager.Instance.SetSpell(go);
     }
 }

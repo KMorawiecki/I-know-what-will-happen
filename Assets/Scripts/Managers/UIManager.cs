@@ -5,9 +5,7 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    private GameManager gameManager;
-    private MovementManager movementManager;
-    private BattleManager battleManager;
+    public static UIManager Instance { get; private set; }
 
     private GameObject canvas;
     private Menu_Icon eqButton;
@@ -27,11 +25,22 @@ public class UIManager : MonoBehaviour
 
     private readonly float icon_speed = 15f;
 
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
-        movementManager = GameObject.Find("MovementManager").GetComponent<MovementManager>();
         canvas = GameObject.Find("Canvas");
 
         rightMenuHolder = new GameObject("RightMenuHolder");
@@ -67,20 +76,18 @@ public class UIManager : MonoBehaviour
 
         GameObject fightPrefab = Resources.Load<GameObject>("Objects/FightButton");
         fightButton = Instantiate(fightPrefab, canvas.transform);
-        fightButton.GetComponent<Button>().onClick.AddListener(() => gameManager.SetFight(true));
+        fightButton.GetComponent<Button>().onClick.AddListener(() => GameManager.Instance.SetFight(true));
         fightButton.SetActive(false);
 
         GameObject movePrefab = Resources.Load<GameObject>("Objects/MoveButton");
         moveButton = Instantiate(movePrefab, canvas.transform);
-        moveButton.GetComponent<Button>().onClick.AddListener(() => gameManager.SetMove(true));
+        moveButton.GetComponent<Button>().onClick.AddListener(() => GameManager.Instance.SetMove(true));
         moveButton.SetActive(false);
     }
 
-    public void ChangeToBattle(BattleManager manager)
+    public void ChangeToBattle()
     {
         ShowBattleButtons();
-
-        battleManager = manager;
 
         GameObject swordPref = Resources.Load<GameObject>("Objects/Sword");
         GameObject staffPref = Resources.Load<GameObject>("Objects/MageStaff");
@@ -88,14 +95,13 @@ public class UIManager : MonoBehaviour
         swordIcon = Instantiate(swordPref, new Vector3(10, 0, 0), Quaternion.identity);
         staffIcon = Instantiate(staffPref, new Vector3(-10, 0, 0), Quaternion.identity);
 
-        manager.SetFightIcons(swordIcon, staffIcon);
+        Instantiate(Resources.Load<BattleManager>("Objects/BattleManager"));
+        BattleManager.Instance.SetFightIcons(swordIcon, staffIcon);
     }
 
     public void ChangeToNormal()
     {
         HideBattleButtons();
-
-        battleManager = null;
 
         Destroy(swordIcon);
         Destroy(staffIcon);
@@ -117,17 +123,32 @@ public class UIManager : MonoBehaviour
     public void ChangeMenus()
     {
         //StopAllCoroutines();
-        StartCoroutine(movementManager.SmoothMovement(rightMenuHolder, new Vector3(2.5f, rightMenuHolder.transform.position.y), icon_speed));
-        StartCoroutine(movementManager.SmoothMovement(swordIcon, new Vector3(7.5f, 0), icon_speed));
-        StartCoroutine(movementManager.SmoothMovement(staffIcon, new Vector3(-7.5f, 0), icon_speed));
+        StartCoroutine(MovementManager.Instance.SmoothMovement(rightMenuHolder, new Vector3(2.5f, rightMenuHolder.transform.position.y), icon_speed));
+        StartCoroutine(MovementManager.Instance.SmoothMovement(swordIcon, new Vector3(7.5f, 0), icon_speed));
+        StartCoroutine(MovementManager.Instance.SmoothMovement(staffIcon, new Vector3(-7.5f, 0), icon_speed));
     }
 
     //change menus back
     public void RestoreMenus()
     {
         //StopAllCoroutines();
-        StartCoroutine(movementManager.SmoothMovement(rightMenuHolder, new Vector3(0, rightMenuHolder.transform.position.y), icon_speed));
-        StartCoroutine(movementManager.SmoothMovement(swordIcon, new Vector3(10f, 0), icon_speed));
-        StartCoroutine(movementManager.SmoothMovement(staffIcon, new Vector3(-10f, 0), icon_speed));
+        StartCoroutine(MovementManager.Instance.SmoothMovement(rightMenuHolder, new Vector3(0, rightMenuHolder.transform.position.y), icon_speed));
+        StartCoroutine(MovementManager.Instance.SmoothMovement(swordIcon, new Vector3(10f, 0), icon_speed));
+        StartCoroutine(MovementManager.Instance.SmoothMovement(staffIcon, new Vector3(-10f, 0), icon_speed));
+    }
+
+    public WizardAttribute GetBar(string menu_name)
+    {
+        switch(menu_name)
+        {
+            case "health":
+                return healthHolder.GetComponentInChildren<WizardAttribute>();
+            case "mana":
+                return manaHolder.GetComponentInChildren<WizardAttribute>();
+            case "integrity":
+                return intHolder.GetComponentInChildren<WizardAttribute>();
+        }
+
+        return null;
     }
 }

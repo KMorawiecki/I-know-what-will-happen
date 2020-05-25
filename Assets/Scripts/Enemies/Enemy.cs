@@ -7,8 +7,10 @@ public abstract class Enemy : MonoBehaviour
     public string animationState;
 
     protected int healthPoints;
-    protected MovementManager moveManager;
+    protected int hitPoints;
     protected Animator animator;
+    protected GameObject playerInst;
+    protected Wizard player;
 
     private bool hit_trigger = false;
     private bool enable_targeting = false;
@@ -17,6 +19,8 @@ public abstract class Enemy : MonoBehaviour
     protected virtual void Start()
     {
         animator = GetComponent<Animator>();
+        playerInst = GameObject.Find("LightBandit (Clone)");
+        player = playerInst.GetComponent<Wizard>();
     }
 
     protected virtual void Update()
@@ -36,6 +40,11 @@ public abstract class Enemy : MonoBehaviour
             spell_to_hit.EnemyBehaviour(this);
         }
     }
+
+    public abstract IEnumerator Turn();
+    protected abstract IEnumerator Attack();
+    protected abstract IEnumerator MoveAway();
+    protected abstract IEnumerator MoveTowards();
 
     public int GetHealth()
     {
@@ -67,7 +76,7 @@ public abstract class Enemy : MonoBehaviour
     protected void Kill()
     {
         animator.SetTrigger("Death");
-        GameObject.Find("MapManager").GetComponent<MapManager>().DisposeOfEnemy(this);
+        MapManager.Instance.DisposeOfEnemy(this);
     }
 
     public bool IsAnimatorInState(string state)
@@ -78,5 +87,34 @@ public abstract class Enemy : MonoBehaviour
     public void SetHurtTrigger()
     {
         hit_trigger = true;
+    }
+
+    public AnimationClip GetAnimationClip(string name)
+    {
+        if (!animator) return null; // no animator
+
+        foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips)
+        {
+            if (clip.name == name)
+            {
+                return clip;
+            }
+        }
+        return null; // no clip by that name
+    }
+
+    //protected static IEnumerator WhilePlaying(this Animation animation,
+    //                                           string animationName)
+    //{
+    //    animation.PlayQueued(animationName);
+    //    yield return animation.WhilePlaying();
+    //}
+
+    protected IEnumerator WaitForAnimation(Animation animation)
+    {
+        do
+        {
+            yield return null;
+        } while (animation.isPlaying);
     }
 }

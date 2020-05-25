@@ -15,7 +15,6 @@ public abstract class Spell : MonoBehaviour
     protected bool targeted;
     protected bool chosenTarget = false;
     protected int mana_cost;
-    protected BattleManager battleManager;
 
     private Vector3Int mouseCell;
     private Grid roomGrid;
@@ -23,8 +22,7 @@ public abstract class Spell : MonoBehaviour
     // Start is called before the first frame update
     protected virtual void Start()
     {
-        roomGrid = GameObject.Find("MapManager").transform.GetComponent<Grid>();
-        battleManager = GameObject.Find("BattleManager").GetComponent<BattleManager>();
+        roomGrid = MapManager.Instance.transform.GetComponent<Grid>();
     }
 
     protected virtual void Update()

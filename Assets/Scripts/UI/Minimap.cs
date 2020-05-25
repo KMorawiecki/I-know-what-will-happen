@@ -29,7 +29,6 @@ public class Minimap : MonoBehaviour
     private int current_clust = 0;
     private int mergedClustersNum = 0; //for equation for new cluster position
     private float shiftUnit = Convert.ToSingle(0.5);
-    private MapManager mapManager;
     private GameObject roomObjectPrefab;
     private GameObject currentRoomObjectPrefab;
     private GameObject currentRoomObjectInstance;
@@ -40,9 +39,7 @@ public class Minimap : MonoBehaviour
         roomObjectPrefab = Resources.Load<GameObject>("Objects/Minimap_room");
         currentRoomObjectPrefab = Resources.Load<GameObject>("Objects/Minimap_current");
 
-        GameObject go = GameObject.Find("MapManager");
-        mapManager = go.GetComponent<MapManager>();
-        mapManager.SetMinimap(this);
+        MapManager.Instance.SetMinimap(this);
 
         GameObject firstCluster = new GameObject("Cluster" + clusterNum);
         firstCluster.transform.SetParent(transform);
@@ -55,7 +52,7 @@ public class Minimap : MonoBehaviour
         currentRoomObjectInstance.transform.SetParent(firstCluster.transform);
         currentRoomObjectInstance.transform.localPosition = new Vector3(0, 0, 0);
 
-        roomDict.Add(mapManager.GetRoom().variant, AddRoom(0, 0, mapManager.GetRoom()));
+        roomDict.Add(MapManager.Instance.GetRoom().variant, AddRoom(0, 0, MapManager.Instance.GetRoom()));
     }
 
     //private void Update()
@@ -102,19 +99,19 @@ public class Minimap : MonoBehaviour
         {
             case "left":
                 att.x_coor-=shiftUnit;
-                teleport = mapManager.GetRoom().leftTel; //room we're leaving
+                teleport = MapManager.Instance.GetRoom().leftTel; //room we're leaving
                 break;
             case "right":
                 att.x_coor+=shiftUnit;
-                teleport = mapManager.GetRoom().rightTel;
+                teleport = MapManager.Instance.GetRoom().rightTel;
                 break;
             case "up":
                 att.y_coor+=shiftUnit;
-                teleport = mapManager.GetRoom().upTel;
+                teleport = MapManager.Instance.GetRoom().upTel;
                 break;
             case "down":
                 att.y_coor-=shiftUnit;
-                teleport = mapManager.GetRoom().downTel;
+                teleport = MapManager.Instance.GetRoom().downTel;
                 break;
         }
 
@@ -182,7 +179,7 @@ public class Minimap : MonoBehaviour
                 while(clusterHolderList[current_clust].transform.childCount > 0)
                     clusterHolderList[current_clust].transform.GetChild(0).SetParent(clusterHolderList[current.visited].transform);
 
-                mapManager.ChangeCluster(current_clust, current.visited);
+                MapManager.Instance.ChangeCluster(current_clust, current.visited);
 
                 upperHolder = current.visited;
                 downerHolder = current_clust;
@@ -194,7 +191,7 @@ public class Minimap : MonoBehaviour
                 while (clusterHolderList[current.visited].transform.childCount > 0)
                     clusterHolderList[current.visited].transform.GetChild(0).SetParent(clusterHolderList[current_clust].transform);
 
-                mapManager.ChangeCluster(current.visited, current_clust);
+                MapManager.Instance.ChangeCluster(current.visited, current_clust);
 
                 upperHolder = current_clust; 
                 downerHolder = current.visited;

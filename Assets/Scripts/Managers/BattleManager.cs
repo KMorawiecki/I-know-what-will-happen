@@ -7,11 +7,9 @@ using UnityEngine.UI;
 
 public class BattleManager: MonoBehaviour
 {
+    public static BattleManager Instance { get; private set; }
+
     private Wizard player;
-    private GameManager gameManager;
-    private MovementManager movementManager;
-    private UIManager uiManager;
-    private MapManager mapManager;
     private List<Enemy> enemies;
     private GameObject room;
     private Vector3Int mouseCell;
@@ -38,21 +36,30 @@ public class BattleManager: MonoBehaviour
     private int player_x;
     private int player_y;
 
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     private void Start()
     {
         playerTurn = true;
         playerMoving = false;
 
-        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
-        movementManager = GameObject.Find("MovementManager").GetComponent<MovementManager>();
-        uiManager = GameObject.Find("UIManager").GetComponent<UIManager>();
         player = GameObject.Find("LightBandit(Clone)").GetComponent<Wizard>();
-        mapManager = GameObject.Find("MapManager").GetComponent<MapManager>();
         move_butt = GameObject.Find("MoveButton(Clone)").GetComponent<Button>();
         fight_butt = GameObject.Find("FightButton(Clone)").GetComponent<Button>();
 
-        room = gameManager.GetRoom();
-        enemies = mapManager.GetEnemies();
+        room = MapManager.Instance.GetRoomInstance();
+        enemies = MapManager.Instance.GetEnemies();
 
         if(player.transform.position.x > 0)
         {
@@ -97,9 +104,9 @@ public class BattleManager: MonoBehaviour
 
         if (!playerTurn && !enemyMoving)
         {
-            foreach (Enemy enemy in enemies)
-                EnemyTurn(enemy);
             enemyMoving = true;
+            //StartCoroutine(MoveEnemies());
+            //no enemy turn yet
         }
         else if (playerTurn)
         {
@@ -108,17 +115,17 @@ public class BattleManager: MonoBehaviour
                 if (Math.Abs(ConvertToTiles().x - player_x) <= player.GetMovementRange()*3 && Math.Abs(ConvertToTiles().y - player_y) <= player.GetMovementRange()*3)
                     StartCoroutine(MovePlayer(ConvertToTiles()));
 
-            if ((Input.GetKey("m") || gameManager.GetMove()) && !moveUI && !moveBlock)
+            if ((Input.GetKey("m") || GameManager.Instance.GetMove()) && !moveUI && !moveBlock)
             {
                 moveUI = true;
-                gameManager.SetFight(false);
+                GameManager.Instance.SetFight(false);
                 SetupMovementUI();
             }
 
-            if ((Input.GetKey("f") || gameManager.GetFight()) && !fightUI)
+            if ((Input.GetKey("f") || GameManager.Instance.GetFight()) && !fightUI)
             {
                 fightUI = true;
-                gameManager.SetMove(false);
+                GameManager.Instance.SetMove(false);
                 SetupFightingUI();
             }
 
@@ -162,8 +169,7 @@ public class BattleManager: MonoBehaviour
 
             Vector3 destination = room.transform.GetComponent<Grid>().CellToWorld(new Vector3Int(Convert.ToInt32(click_pos.x), Convert.ToInt32(click_pos.y), 0));
 
-            StartCoroutine(movementManager.SmoothMovement(player.gameObject, destination, player_speed));
-            yield return new WaitUntil(() => player.gameObject.transform.position.x == destination.x && player.gameObject.transform.position.y == destination.y);
+            yield return StartCoroutine(MovementManager.Instance.SmoothMovement(player.gameObject, destination, player_speed));
 
             player_x = (int) click_pos.x;
             player_y = (int) click_pos.y;
@@ -173,10 +179,12 @@ public class BattleManager: MonoBehaviour
             playerMoving = false;
 
             UnsetupMovementUI();
-            gameManager.SetMove(false);
-            moveUI = false;
-            move_butt.interactable = false;
-            moveBlock = true;
+
+            //TODO: will enable when turns are implemented
+            //GameManager.Instance.SetMove(false);
+            //moveUI = false;
+            //move_butt.interactable = false;
+            //moveBlock = true;
         }
 
         yield return null;
@@ -204,16 +212,25 @@ public class BattleManager: MonoBehaviour
         return new Vector2(x, y);
     }
 
-    private void EnemyTurn(Enemy enemy)
+    private IEnumerator MoveEnemies()
     {
-        //TODO: AImejbi?
+        foreach (Enemy enemy in enemies)
+            yield return StartCoroutine(EnemyTurn(enemy));
+
+        playerTurn = true;
+        enemyMoving = false;
+    }
+
+    private IEnumerator EnemyTurn(Enemy enemy)
+    {
+        yield return StartCoroutine(enemy.Turn());
     }
 
     private void SetupMovementUI()
     {
         //redo fighting icons
         if(fightUI)
-            uiManager.RestoreMenus();
+            UIManager.Instance.RestoreMenus();
 
         Tilemap lines = room.transform.Find("BattleLines").GetComponent<Tilemap>();
         foreach (var position in lines.cellBounds.allPositionsWithin)
@@ -233,7 +250,7 @@ public class BattleManager: MonoBehaviour
     private void SetupFightingUI()
     {
         //TODO: redo color change
-        uiManager.ChangeMenus();
+        UIManager.Instance.ChangeMenus();
 
         moveUI = false;
     }
@@ -241,8 +258,8 @@ public class BattleManager: MonoBehaviour
     private void UnSetupFightingUI()
     {
         //TODO: redo color change
-        gameManager.SetFight(false);
-        uiManager.RestoreMenus();
+        GameManager.Instance.SetFight(false);
+        UIManager.Instance.RestoreMenus();
 
         fightUI = false;
     }
@@ -270,7 +287,7 @@ public class BattleManager: MonoBehaviour
         staff.GetComponent<FightAtributeHolder>().UnblockUI();
         sword.GetComponent<FightAtributeHolder>().UnblockUI();
         UnSetupFightingUI();
-        foreach (Enemy enemy in mapManager.GetEnemies())
+        foreach (Enemy enemy in MapManager.Instance.GetEnemies())
         {
             enemy.ResetTargeting();
         }
@@ -278,7 +295,7 @@ public class BattleManager: MonoBehaviour
 
     public IEnumerator EndBattle()
     {
-        yield return StartCoroutine(mapManager.ChangeToNormal());
+        yield return StartCoroutine(MapManager.Instance.ChangeToNormal());
         Destroy(gameObject);
     }
 }

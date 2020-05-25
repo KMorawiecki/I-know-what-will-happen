@@ -58,8 +58,8 @@ public class ExistentialPurge : Spell
         Destroy(target_enemy.gameObject);
         Destroy(halo);
 
-        GameObject.Find("MapManager").GetComponent<MapManager>().DisposeOfEnemy(target_enemy);
-        battleManager.EndSpell();
+        MapManager.Instance.DisposeOfEnemy(target_enemy);
+        BattleManager.Instance.EndSpell();
     }
 
     private IEnumerator Dawn(Light light)

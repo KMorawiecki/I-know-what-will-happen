@@ -7,18 +7,30 @@ using System;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance { get; private set; }
+
     private int level = 1;
     private Wizard wizPrefab;
     private Wizard wizInst;
-    private MovementManager movementManager;
-    private MapManager mapManager;
-    private UIManager uiManager;
     private PlayerPossession possession;
 
     private Goblin goblinPrefab;
 
     private bool battle_move;
     private bool battle_fight;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
 
     private void Start()
     {
@@ -28,33 +40,21 @@ public class GameManager : MonoBehaviour
         wizPrefab = Resources.Load<Wizard>("Objects/LightBandit");
         wizInst = Instantiate(wizPrefab, new Vector3(0, 0, -1), Quaternion.identity);
 
-        GameObject go = GameObject.Find("MovementManager");
-        if (go != null)
-        {
-            movementManager = go.GetComponent<MovementManager>();
-            movementManager.SetPlayer(wizInst);
-        }
-
-        go = GameObject.Find("MapManager");
-        if (go != null)
-            mapManager = go.GetComponent<MapManager>();
-
-        GameObject UI_man_go = new GameObject("UIManager");
-        uiManager = UI_man_go.AddComponent<UIManager>();
+        MovementManager.Instance.SetPlayer(wizInst);
 
         goblinPrefab = Resources.Load<Goblin>("Objects/Goblin");
     }
 
     public void DisableRoom()
     {
-        GameObject cur_room = mapManager.GetRoomInstance();
+        GameObject cur_room = MapManager.Instance.GetRoomInstance();
         cur_room.SetActive(false);
         wizInst.gameObject.SetActive(false);
     }
 
     public void EnableRoom()
     {
-        GameObject cur_room = mapManager.GetRoomInstance();
+        GameObject cur_room = MapManager.Instance.GetRoomInstance();
         cur_room.SetActive(true);
         wizInst.gameObject.SetActive(true);
     }
@@ -64,11 +64,6 @@ public class GameManager : MonoBehaviour
         GameObject cur_tab = GameObject.Find("CurrentTab");
         Destroy(cur_tab);
         EnableRoom();
-    }
-
-    public GameObject GetRoom()
-    {
-        return mapManager.GetRoomInstance();
     }
 
     public Enemy GetMonster(string name)
@@ -82,10 +77,7 @@ public class GameManager : MonoBehaviour
         battle_move = false;
         battle_fight = false;
 
-        GameObject go = new GameObject("BattleManager");
-        BattleManager battleManager = go.AddComponent<BattleManager>();
-
-        uiManager.ChangeToBattle(battleManager);
+        UIManager.Instance.ChangeToBattle();
         wizInst.BattleStance();
     }
 
@@ -94,7 +86,7 @@ public class GameManager : MonoBehaviour
         battle_move = false;
         battle_fight = false;
 
-        uiManager.ChangeToNormal();
+        UIManager.Instance.ChangeToNormal();
         wizInst.NormalStance();
     }
 

@@ -289,7 +289,14 @@ public class MapManager : MonoBehaviour
             name_list = name_list.Substring(name_list.IndexOf("_", 1));
             hp_list = hp_list.Substring(hp_list.IndexOf("_", 1));
 
-            Enemy monster = Instantiate(GameManager.Instance.GetMonster(name), currentRoomInstance.transform.GetComponent<Grid>().CellToWorld(new Vector3Int(x_pos, y_pos, 0)), Quaternion.identity);
+            //Enemy monster = Instantiate(GameManager.Instance.GetMonster(name), currentRoomInstance.transform.GetComponent<Grid>().CellToWorld(new Vector3Int(x_pos, y_pos, 0)), Quaternion.identity);
+            float y_world = y_pos / 3;
+            y_world = y_world * 2.5f;
+
+            float x_world = x_pos / 3;
+            x_world = x_world * 2.4f + 0.5f;
+
+            Enemy monster = Instantiate(GameManager.Instance.GetMonster(name), new Vector3(x_world, y_world, 0), Quaternion.identity);
             enemyList.Add(monster);
 
             if (monster.GetHealth() > hp)

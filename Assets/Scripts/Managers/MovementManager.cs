@@ -78,7 +78,8 @@ public class MovementManager : MonoBehaviour
         else
             MapManager.Instance.ShakeThatDoor(dir);
 
-        movementCooldown = false;
+        if (MapManager.Instance.GetRoom().enemy_num == 0)
+            movementCooldown = false;
         yield return null;
     }
 
@@ -163,5 +164,10 @@ public class MovementManager : MonoBehaviour
     public Vector3 GetPlayerPosition()
     {
         return player.transform.position;
+    }
+
+    public void ResetMovementCooldown()
+    {
+        movementCooldown = false;
     }
 }

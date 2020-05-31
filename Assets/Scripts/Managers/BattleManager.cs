@@ -51,7 +51,7 @@ public class BattleManager: MonoBehaviour
 
     private void Start()
     {
-        playerTurn = true;
+        playerTurn = false;
         playerMoving = false;
 
         player = GameObject.Find("LightBandit(Clone)").GetComponent<Wizard>();
@@ -105,14 +105,13 @@ public class BattleManager: MonoBehaviour
         if (!playerTurn && !enemyMoving)
         {
             enemyMoving = true;
-            //StartCoroutine(MoveEnemies());
-            //no enemy turn yet
+            StartCoroutine(MoveEnemies());
         }
         else if (playerTurn)
         {
             //move player
             if (Input.GetMouseButtonDown(0) && moveUI && !playerMoving)
-                if (Math.Abs(ConvertToTiles().x - player_x) <= player.GetMovementRange()*3 && Math.Abs(ConvertToTiles().y - player_y) <= player.GetMovementRange()*3)
+                if (Math.Abs(ConvertToTiles().x - player_x) <= player.GetMovementRange() * 3 && Math.Abs(ConvertToTiles().y - player_y) <= player.GetMovementRange() * 3)
                     StartCoroutine(MovePlayer(ConvertToTiles()));
 
             if ((Input.GetKey("m") || GameManager.Instance.GetMove()) && !moveUI && !moveBlock)
@@ -154,6 +153,9 @@ public class BattleManager: MonoBehaviour
     {
         if (click_pos.x <= 7 && click_pos.x >= -7 && click_pos.y <= 4 && click_pos.y >= -4)
         {
+            Debug.Log("x: " + Convert.ToString(click_pos.x));
+            Debug.Log("y: " + Convert.ToString(click_pos.y));
+
             playerMoving = true;
 
             switch (click_pos.x >= player.transform.position.x)
@@ -167,7 +169,14 @@ public class BattleManager: MonoBehaviour
             }
             player.SetMoving(true);
 
-            Vector3 destination = room.transform.GetComponent<Grid>().CellToWorld(new Vector3Int(Convert.ToInt32(click_pos.x), Convert.ToInt32(click_pos.y), 0));
+            //Vector3 destination = room.transform.GetComponent<Grid>().CellToWorld(new Vector3Int(Convert.ToInt32(click_pos.x), Convert.ToInt32(click_pos.y), 0));
+            float y_world = click_pos.y / 3;
+            y_world = y_world * 2.5f;
+
+            float x_world = click_pos.x / 3;
+            x_world = x_world * 2.4f + 0.5f;
+
+            Vector3 destination = new Vector3(x_world, y_world, 0);
 
             yield return StartCoroutine(MovementManager.Instance.SmoothMovement(player.gameObject, destination, player_speed));
 
@@ -177,6 +186,7 @@ public class BattleManager: MonoBehaviour
             player.SetMoving(false);
 
             playerMoving = false;
+            playerTurn = false;
 
             UnsetupMovementUI();
 
@@ -291,11 +301,19 @@ public class BattleManager: MonoBehaviour
         {
             enemy.ResetTargeting();
         }
+
+        playerTurn = false;
     }
 
     public IEnumerator EndBattle()
     {
         yield return StartCoroutine(MapManager.Instance.ChangeToNormal());
+        MovementManager.Instance.ResetMovementCooldown();
         Destroy(gameObject);
+    }
+
+    public float ConvBoardToReal(int board)
+    {
+        return Convert.ToSingle(board * 2.5);
     }
 }

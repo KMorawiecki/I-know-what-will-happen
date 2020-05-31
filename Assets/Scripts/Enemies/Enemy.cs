@@ -8,18 +8,21 @@ public abstract class Enemy : MonoBehaviour
 
     protected int healthPoints;
     protected int hitPoints;
+    protected float monsterSpeed; 
+
     protected Animator animator;
     protected GameObject playerInst;
     protected Wizard player;
 
     private bool hit_trigger = false;
     private bool enable_targeting = false;
+    private bool isMoving = false;
     private Spell spell_to_hit;
 
     protected virtual void Start()
     {
         animator = GetComponent<Animator>();
-        playerInst = GameObject.Find("LightBandit (Clone)");
+        playerInst = GameObject.Find("LightBandit(Clone)");
         player = playerInst.GetComponent<Wizard>();
     }
 
@@ -30,6 +33,11 @@ public abstract class Enemy : MonoBehaviour
             Hurt();
             hit_trigger = false;
         }
+
+        if (isMoving)
+            animator.SetInteger("AnimState", 2);
+        else
+            animator.SetInteger("AnimState", 0);
     }
 
     private void OnMouseDown()
@@ -44,7 +52,7 @@ public abstract class Enemy : MonoBehaviour
     public abstract IEnumerator Turn();
     protected abstract IEnumerator Attack();
     protected abstract IEnumerator MoveAway();
-    protected abstract IEnumerator MoveTowards();
+    protected abstract IEnumerator MoveTowards(List<string> disabledDir);
 
     public int GetHealth()
     {
@@ -110,11 +118,50 @@ public abstract class Enemy : MonoBehaviour
     //    yield return animation.WhilePlaying();
     //}
 
-    protected IEnumerator WaitForAnimation(Animation animation)
+    protected IEnumerator WaitForAnimation(Animator animator, string name)
     {
         do
         {
             yield return null;
-        } while (animation.isPlaying);
+        } while (!animator.GetCurrentAnimatorStateInfo(0).IsName(name));
+    }
+
+    protected IEnumerator MoveMonster(Vector3 destination)
+    {
+        isMoving = true;
+        yield return StartCoroutine(MovementManager.Instance.SmoothMovement(gameObject, destination, monsterSpeed));
+        isMoving = false;
+    }
+
+    //return: true - good to go, false - obstacle
+    protected bool CheckForCollision(string dir)
+    {
+        Vector2 destination = new Vector2();
+
+        switch (dir)
+        {
+            case "up":
+                destination = new Vector2(transform.position.x, transform.position.y + 2.5f);
+                break;
+            case "down":
+                destination = new Vector2(transform.position.x, transform.position.y - 2.5f);
+                break;
+            case "left":
+                destination = new Vector2(transform.position.x - 2.4f, transform.position.y);
+                break;
+            case "right":
+                destination = new Vector2(transform.position.x + 2.4f, transform.position.y);
+                break;
+        }
+
+        RaycastHit2D hit = Physics2D.Raycast(destination, Vector2.zero);
+        if (hit.collider != null)
+            return false;
+        return true;
+    }
+
+    public Vector3 GetPosition()
+    {
+        return transform.position;
     }
 }

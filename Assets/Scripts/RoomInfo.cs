@@ -23,12 +23,12 @@ public class RoomInfo
     public bool downTel;
 
     //OK, THIS IS A WORKAROUD TO CLEAN, SIMPLE DICTIONARY, BEAR WITH ME HERE
-    //enemy x - x position, digit count equals number of enemies (ie. second digit form end is x position of second monster default: 0
+    //enemy x - x position, digit count equals number of enemies (ie. second digit from end is x position of second monster default: 0
     //enemy y - same default: 0
     //enemy name - after "_" comes another enemy name default: ""
-    //enemy hp - in format "123_123_123" default: "
+    //enemy hp - in format "123_123_123" default: ""
 
-    //goodbye my love
+    //goodbye my not-serializable-love
     //public Dictionary<Tuple<int, int>, string> enemyPositions; //x and y on room tilemap of enemy of given name
 
     public int enemy_num;

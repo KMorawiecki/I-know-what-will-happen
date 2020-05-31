@@ -78,7 +78,7 @@ public class InitDungeon
 
                 //enemy chance calculated
 
-                if (random.Next(5) == 0)
+                if (random.Next(1) == 0)
                     AddMonsters(newDungeonLevel.ElementAt(i * (level + 3) + j));
             }
 
